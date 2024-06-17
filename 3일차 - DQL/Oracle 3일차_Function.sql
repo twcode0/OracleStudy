@@ -1,0 +1,45 @@
+--3일차
+--오라클 함수의 종류
+-- 1. 단일행 함수 - 결과값 여러개
+-- 2. 다중행 함수 - 결과값 1개(그룹함수)
+SELECT SUM(SALARY) FROM EMPLOYEE;
+
+-- a. 숫자 처리 함수
+-- ABS(절대값), MOD(나머지), TRUNC(소숫점 지정 버림), FLOOR(버림), ROUND(반올림), CEIL(올림)
+SELECT TRUNC(SYSDATE-HIRE_DATE,1) FROM EMPLOYEE; --소수점 첫째자리까지 남기고 다 버려요
+SELECT MOD(35, 3) FROM DUAL; -- DUAL TABLE 가상의 테이블임
+SELECT SYSDATE FROM DUAL;
+SELECT ABS(-1) FROM DUAL;
+-- b. 문자 처리 함수
+
+-- c. 날짜 처리 함수
+-- ADD_MONTH(), MONTHS_BETWWEN(), LAST_DAY(), EXTRACT, SYSDATE
+SELECT ADD_MONTHS(SYSDATE, 2) FROM DUAL; -- 오늘로 부터 2개월 뒤를 출력해주는 함수
+SELECT MONTHS_BETWEEN(SYSDATE, '24/05/07') FROM DUAL; --오늘이랑 24/5/7 사이의 날짜 계산
+
+-- ex1) EMPLOYEE 테이블에서 사원의 이름, 입사일, 입사 후 3개월이 된 날짜를 조회하시오.
+SELECT EMP_NAME "이름", HIRE_DATE "입사일", ADD_MONTHS(HIRE_DATE, 3)
+FROM EMPLOYEE;
+-- ex2) EMPLOYEE 테이블에서 사원의 이름, 입사일, 근무 개월수를 조회하시오.
+SELECT EMP_NAME, HIRE_DATE, FLOOR(MONTHS_BETWEEN(SYSDATE, HIRE_DATE))
+FROM EMPLOYEE;
+
+--LSAT_DAY() 마지막날짜를 구해줌
+SELECT LAST_DAY(SYSDATE) FROM DUAL;
+SELECT LAST_DAY('24/02/23')+1 FROM DUAL; --다음달
+
+-- ex3) EMPLOYEE 테이블에서 사원이름, 입사일, 입사월의 마지막날을 조회하세요.
+SELECT EMP_NAME, HIRE_DATE, LAST_DAY(HIRE_DATE)
+FROM EMPLOYEE;
+
+--EXTRACT 년도, 월, 일을 DATE에서 추출해줌
+SELECT EXTRACT(YEAR FROM SYSDATE) FROM DUAL;
+SELECT EXTRACT(MONTH FROM SYSDATE) FROM DUAL;
+SELECT EXTRACT(DAY FROM SYSDATE) FROM DUAL;
+
+-- ex4) EMPLOYEE 테이블에서 사원이름, 입사 년도, 입사 월, 입사 일을 조회하시오.
+SELECT EMP_NAME, EXTRACT(YEAR FROM HIRE_DATE)||'년' "입사년도", EXTRACT(MONTH FROM HIRE_DATE)||'월' "입사 월"
+,EXTRACT(DAY FROM HIRE_DATE)||'일' "입사 일"
+FROM EMPLOYEE;
+
+COMMIT;

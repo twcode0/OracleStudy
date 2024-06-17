@@ -1,0 +1,193 @@
+--3일차
+-- DDL, Date Definition Language 데이터 정의어
+-- CREATE, ALTER, DROP           DDL의 종류
+-- CREATE USER, CREATE TABLE,... 예시
+-- DROP TABLE, ...
+-- ALTER 로 할 수 있었던 것
+-- 컬럼추가, 컬럼삭제, 컬럼수정(데이터 타입, 이름), 테이블명 수정 2가지
+
+-- 제약조건 추가, 삭제, 수정 
+-- 제약조건을 추가하면 이름이 생김, 이름을 알아야 삭제 가능
+SELECT * FROM USER_CONSTRAINTS WHERE TABLE_NAME = 'USER_TBL';
+--제약조건을 확인하는거
+ALTER TABLE USER_TBL
+DROP CONSTRAINT SYS_C007165;
+-- 제약조건 삭제
+
+ALTER TABLE USER_TBL
+ADD CONSTRAINT FK_GRADE_CODE FOREIGN KEY(GRADE_CODE) REFERENCES USER_GRADE(GRADE_CODE);
+--제약조건 추가
+--CONSTRAINT FK_GRADE_CODE 생략가능 이름 붙여주는거
+--NOT NULL 추가는 좀 다름 MODIFY 사용
+--제약조건명을 따로 붙이지  않음
+ALTER TABLE USER_TBL
+MODIFY USER_ID NOT NULL;
+DESC USER_TBL;
+ALTER TABLE USER_TBL
+MODIFY USER_DATE DEFAULT SYSDATE;
+
+SELECT * FROM USER_CONSTRAINTS WHERE TABLE_NAME = 'USER_TBL';
+
+--ex) USER_GRADE가 가지고 있는 PK 삭제후 같은 이름으로 재생성
+-- 제약조건 수정은 삭제하고 추가하는 것, 단 이름은 바꿀 수 있음
+ALTER TABLE USER_GRADE
+RENAME CONSTRAINT PRIMARTKEY_GR_CODE TO PRIMARYKEY_GR_CODE;
+
+SELECT * FROM USER_CONSTRAINTS WHERE TABLE_NAME = 'USER_GRADE';
+
+ALTER TABLE USER_GRADE
+DROP CONSTRAINT PRIMARTKEY_GR_CODE;
+--삭제
+ALTER TABLE USER_GRADE
+ADD CONSTRAINT PK_GRADE_CODE PRIMARY KEY(GRADE_CODE);
+--생성
+
+
+
+--ex01) USER_FOREIGN_KEY 테이블에 USER_DATE DATE 컬럼을 추가해주세요
+DESC USER_FOREIGN_KEY;
+ALTER TABLE USER_FOREIGN_KEY
+ADD REG_DATE DATE;
+ALTER TABLE USER_FOREIGN_KEY
+ADD USER_DATE DATE;
+--ex02) USER_FOREIGN_KEY 테이블에 USER_DATE DATE 삭제을 추가해주세요
+ALTER TABLE USER_FOREIGN_KEY
+DROP COLUMN USER_DATE;
+--ex03) USER_FOREIGN_KEY 테이블에 USER_DATE 컬럼의 자료형을 VARCHAR2(10)으로 변경해주세요
+ALTER TABLE USER_FOREIGN_KEY
+MODIFY USER_DATE VARCHAR2(10);
+--ex04) USER_FOREIGN_KEY 테이블에 USER_DATE DATE 컬럼의 이름을 REWG_DATE로 변경해주세요
+ALTER TABLE USER_FOREIGN_KEY
+RENAME COLUMN REG_DATE TO USER_DATE;
+--UESR_DATE의 VARCHAR2(10)을 DATE로 바꿔주세용
+ALTER TABLE USER_FOREIGN_KEY
+MODIFY USER_DATE DATE;
+--ex05) USER_FOREIGN_KEY 테이블의 이름을 USER_TBL로 바꿔주세요 (2가지)
+ALTER TABLE USER_FOREIGN_KEY
+RENAME TO USER_TBL;
+
+RENAAME USER_FOREIGN_KEY TO USER_TBL;
+
+SELECT * FROM USER_TBL;
+
+-- 제약조건 활성화/비활성화
+ALTER TABLE USER_TBL
+DISABLE CONSTRAINT FK_GRADE_CODE;
+ALTER TABLE USER_TBL
+ENABLE CONSTRAINT FK_GRADE_CODE;
+SELECT * FROM USER_CONSTRAINTS WHERE TABLE_NAME = 'USER_TBL';
+
+
+
+--3. EMPLOYEE 테이블에서 20년 이상 근속자의 이름,월급,보너스율 출력하시오
+DESC EMPLOYEE;
+
+--1.EMPLOYEE 테이블에서 이름,연봉, 총수령액(보너스포함),
+--       실수령액(총 수령액-(월급*세금 3%))가 출력되도록 하시오.
+SELECT EMP_NAME, SALARY*12 AS 연봉,
+SALARY*12+SALARY*NVL(BONUS,0) "총수령액"
+,(SALARY*12+SALARY*NVL(BONUS,0)) - (SALARY*0.03) AS "실수령액"
+FROM EMPLOYEE;
+--2. EMPLOYEE 테이블에서 이름, 근무 일수를 출력해보시오.
+--    (SYSDATE를 사용하면 현재 시간 출력)
+SELECT EMP_NAME AS 이름 , HIRE_DATE "입사일", SYSDATE AS "오늘"
+,ROUND(SYSDATE - HIRE_DATE) "근무일수"
+FROM EMPLOYEE;
+
+SELECT EMP_NAME AS 이름, SALARY "연봉" , NVL(BONUS, 0)
+FROM EMPLOYEE WHERE ROUND(SYSDATE - HIRE_DATE) >= 7300;
+--1.EMPLOYEE 테이블에서 이름 끝이 연으로 끝나는 사원의 이름을 출력하시오
+--2.EMPLOYEE 테이블에서 전화번호 처음 3자리가 010이 아닌 사원의 이름, 전화번호를 출력하시오
+--3.EMPLOYEE 테이블에서 메일주소의 's'가 들어가면서, DEPT_CODE가 D9 또는 D6이고
+--고용일이 90/01/01 ~ 00/12/01이면서,
+--월급이 270만원이상인 사원의 전체 정보를 출력하시오
+--1
+SELECT EMP_NAME FROM EMPLOYEE
+WHERE EMP_NAME LIKE '%연';
+
+--2
+SELECT EMP_NAME, PHONE FROM EMPLOYEE
+WHERE PHONE NOT LIKE '010%';
+--3
+SELECT * FROM EMPLOYEE
+WHERE EMAIL LIKE '%s%'
+--AND (DEPT_CODE = 'D9' OR DEPT_CODE = 'D6')
+AND (DEPT_CODE IN ('D9','D6'))
+--AND (HIRE_DATE >= '90/01/01' AND HIRE_DATE <= '00/12/01')
+AND (HIRE_DATE BETWEEN '90/01/01' AND '01/12/01')
+AND SALARY >= 2700000;
+
+-- 최종 실습 문제
+-- 문제1. 
+-- 입사일이 5년 이상, 10년 이하인 직원의 이름,주민번호,급여,입사일을 검색하여라
+SELECT EMP_NAME "이름", EMP_NO "주민등록번호",
+SALARY "급여", HIRE_DATE "입사일", 
+FROM EMPLOYEE
+WHERE ROUND(SYSDATE - HIRE_DATE) >= 1825
+    AND (SYSDATE - HIRE_DATE) <= 3650;
+
+-- 문제2.
+-- 재직중이 아닌 직원의 이름,부서코드, 고용일, 근무기간, 퇴직일을 검색하여라 
+--(퇴사 여부 : ENT_YN)
+SELECT EMP_NAME "이름", DEPT_CODE "부서코드", HIRE_DATE "고용일",
+ROUND(ENT_DATE - HIRE_DATE) "근무기간", ENT_DATE "퇴직일", ENT_YN
+FROM EMPLOYEE
+WHERE ENT_YN = 'Y';
+
+-- 문제3.
+-- 근속년수가 10년 이상인 직원들을 검색하여
+-- 출력 결과는 이름,급여,근속년수(소수점X)를 근속년수가 오름차순으로 정렬하여 출력하라
+-- 단, 급여는 50% 인상된 급여로 출력되도록 하여라.
+SELECT EMP_NAME "이름" , SALARY*1.5 "급여", FLOOR((SYSDATE - HIRE_DATE)/365) "근속년수"
+FROM EMPLOYEE
+WHERE FLOOR((SYSDATE - HIRE_DATE)/365) >= 10
+ORDER BY 3 ASC;
+
+-- 문제4.
+-- 입사일이 99/01/01 ~ 10/01/01 인 사람 중에서 급여가 2000000 원 이하인 사람의
+-- 이름,주민번호,이메일,폰번호,급여를 검색 하시오
+SELECT EMP_NAME "이름", EMP_NO "주민번호", EMAIL "이메일",
+PHONE "폰번호", SALARY "급여"
+FROM EMPLOYEE
+WHERE HIRE_DATE BETWEEN '99/01/01' AND '10/01/01'
+AND SALARY <= 2000000;
+
+-- 문제5.
+-- 급여가 2000000원 ~ 3000000원 인 여직원 중에서 4월 생일자를 검색하여 
+-- 이름,주민번호,급여,부서코드를 주민번호 순으로(내림차순) 출력하여라
+-- 단, 부서코드가 null인 사람은 부서코드가 '없음' 으로 출력 하여라.
+SELECT EMP_NAME, EMP_NO, SALARY, NVL(DEPT_CODE, '없음') "DEPT_CODE"
+FROM EMPLOYEE
+WHERE SALARY BETWEEN 2000000 AND 3000000
+AND EMP_NO LIKE '__04__-2%'
+ORDER BY EMP_NO DESC;
+
+-- 문제6.
+-- 남자 사원 중 보너스가 없는 사원의 오늘까지 근무일을 측정하여 
+-- 1000일 마다(소수점 제외) 
+-- 급여의 10% 보너스를 계산하여 이름,특별 보너스 (계산 금액) 결과를 출력하여라.
+-- 단, 이름 순으로 오름 차순 정렬하여 출력하여라.
+SELECT EMP_NAME, FLOOR(FLOOR(SYSDATE-HIRE_DATE)/1000)*SALARY*0.1 "특별 보너스"
+FROM EMPLOYEE
+WHERE (EMP_NO LIKE '%-1%' OR EMP_NO LIKE '%-3%')
+AND BONUS IS NULL
+ORDER BY EMP_NAME ASC;
+
+-- extra1
+-- EMPLOYEE 테이블에서 EMAIL ID 중 @ 앞자리가 5자리인 직원을 조회한다면?
+SELECT *FROM EMPLOYEE
+WHERE EMAIL LIKE '_____@%';
+-- extra2
+-- EMPLOYEE 테이블에서 EMAIL ID 중 '_' 앞자리가 3자리인 직원을 조회한다면?
+SELECT *FROM EMPLOYEE
+WHERE EMAIL LIKE '___\_%@%' ESCAPE '\';
+-- 실습1
+-- 관리자(MANAGER_ID)도 없고 부서 배치(DEPT_CODE)도 받지 않은  
+-- 직원의 이름 조회하시오
+SELECT EMP_NAME, MANAGER_ID, DEPT_CODE FROM EMPLOYEE
+WHERE MANAGER_ID IS NULL AND DEPT_CODE IS NULL;
+
+-- 실습2
+-- 부서배치를 받지 않았지만 보너스를 지급하는 직원 전체 정보 조회
+SELECT * FROM EMPLOYEE
+WHERE DEPT_CODE IS NULL AND BONUS IS NOT NULL;
